@@ -56,7 +56,7 @@ pipeline {
                 apt-get update 
                 apt-get install -y curl unzip zip jq
                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" 
-                unzip -o awscliv2.zip 
+                unzip -q -o awscliv2.zip 
                 ./aws/install 
                 apt-get install sudo
                 SECRET = $(aws secretsmanager get-secret-value --secret-id unity-secret --query 'SecretString')
