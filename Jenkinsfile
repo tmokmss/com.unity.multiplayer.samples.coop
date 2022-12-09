@@ -93,8 +93,7 @@ pipeline {
                 # cd $UNITY_PROJECT_DIR
                 mkdir -p ./iOSProj
                 mkdir -p ./Build/iosBuild
-                xvfb-run --auto-servernum --server-args='-screen 0 640x480x24' \
-                    /opt/unity/Editor/Unity \
+                unity-editor \
                     -quit \
                     -batchmode \
                     -nographics \
@@ -103,6 +102,9 @@ pipeline {
                     -customBuildTarget iOS \
                     -customBuildName iosBuild \
                     -customBuildPath ./Build/iosBuild \
+                    -username "\$UNITY_EMAIL" \
+                    -password "\$UNITY_PASSWORD" \
+                    -serial "\$UNITY_SERIAL" \
                     -logFile /dev/stdout
                 echo "===Zipping Xcode project"
                 zip -r iOSProj iOSProj
