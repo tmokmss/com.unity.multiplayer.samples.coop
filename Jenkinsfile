@@ -61,9 +61,9 @@ pipeline {
                 ./aws/install 
                 apt-get install sudo
                 aws secretsmanager get-secret-value --secret-id unity-secret --query 'SecretString' > secret.txt
-                export UNITY_SERIAL = $(cat secret.txt | jq 'fromjson | .SERIAL')
-                export UNITY_EMAIL = $(cat secret.txt | jq 'fromjson | .EMAIL')
-                export UNITY_PASSWORD = $(cat secret.txt | jq 'fromjson | .PASSWORD')
+                export UNITY_SERIAL=$(cat secret.txt | jq 'fromjson | .SERIAL')
+                export UNITY_EMAIL=$(cat secret.txt | jq 'fromjson | .EMAIL')
+                export UNITY_PASSWORD=$(cat secret.txt | jq 'fromjson | .PASSWORD')
                 # https://game.ci/docs/github/activation
                 # Following section can be uncommented if Unity Build server is used
                 # just to push it through
