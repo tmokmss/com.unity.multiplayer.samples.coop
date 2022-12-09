@@ -50,6 +50,7 @@ pipeline {
             steps {
                 // install stuff for Unity, build xcode project, archive the result
                 sh '''#!/bin/bash
+                set -xe
                 printenv
                 ls -la
                 echo "===Installing stuff for unity" 
