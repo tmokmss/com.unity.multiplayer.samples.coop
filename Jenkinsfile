@@ -27,6 +27,7 @@ pipeline {
         UNITY_LICENSE_FILE='UNITY_LICENSE_FILE'
         PROVISIONING_PROFILE_NAME='UnityBuildSample-profile'
         // secret from Secrets Manager
+        UNIRT_SECRET_NAME='unity-secret'
         TEAM_ID_KEY='TEAM_ID'
         LICENSE_SERVER_ENDPOINT='LICENSE_SERVER_ENDPOINT'
         SIGNING_CERT='SIGNING_CERT'
@@ -50,13 +51,19 @@ pipeline {
                 // install stuff for Unity, build xcode project, archive the result
                 sh '''
                 printenv
+                ls -la
                 echo "===Installing stuff for unity" 
                 apt-get update 
-                apt-get install -y curl unzip zip
+                apt-get install -y curl unzip zip jq
                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" 
                 unzip -o awscliv2.zip 
                 ./aws/install 
                 apt-get install sudo
+                SECRET = $(aws secretsmanager get-secret-value --secret-id unity-secret --query 'SecretString')
+                export UNITY_SERIAL = $(echo $SECRET | jq 'fromjson | .SERIAL')
+                export UNITY_EMAIL = $(echo $SECRET | jq 'fromjson | .EMAIL')
+                export UNITY_PASSWORD = $(echo $SECRET | jq 'fromjson | .PASSWORD')
+                # https://game.ci/docs/github/activation
                 # Following section can be uncommented if Unity Build server is used
                 # just to push it through
                 # sudo mkdir -p /usr/share/unity3d/config/
@@ -72,17 +79,17 @@ pipeline {
                 # }'
                 # Copying Unity .ulf license file from S3 to container
                 # aws s3 cp "s3://${S3_BUCKET}/Unity_2021.3.6f1-ios-1.0.ulf" "/root/.local/share/unity3d/Unity/Unity_lic.ulf"
-                mkdir -p "/root/.local/share/unity3d/Unity"
-                aws secretsmanager get-secret-value --secret-id $UNITY_LICENSE_FILE --output text --query SecretBinary |
-                         base64 -d > "/root/.local/share/unity3d/Unity/Unity_lic.ulf"
+                # mkdir -p "/root/.local/share/unity3d/Unity"
+                # aws secretsmanager get-secret-value --secret-id $UNITY_LICENSE_FILE --output text --query SecretBinary |
+                #          base64 -d > "/root/.local/share/unity3d/Unity/Unity_lic.ulf"
                 echo "===Building Xcode project" 
-		# We also pull in additional repository with actual Unity Project. 
-		# We have several configuration files for our build configuration 
-		# You can find those in UnityProjectSample folder
-                rm nodulus -rf
-                git clone https://github.com/Hyperparticle/nodulus.git
-                cp -nR nodulus/* UnityProjectSample/
-                cd $UNITY_PROJECT_DIR
+                # We also pull in additional repository with actual Unity Project. 
+                # We have several configuration files for our build configuration 
+                # You can find those in UnityProjectSample folder
+                # rm nodulus -rf
+                # git clone https://github.com/Hyperparticle/nodulus.git
+                # cp -nR nodulus/* UnityProjectSample/
+                # cd $UNITY_PROJECT_DIR
                 mkdir -p ./iOSProj
                 mkdir -p ./Build/iosBuild
                 xvfb-run --auto-servernum --server-args='-screen 0 640x480x24' \
@@ -98,6 +105,7 @@ pipeline {
                     -logFile /dev/stdout
                 echo "===Zipping Xcode project"
                 zip -r iOSProj iOSProj
+                unity-editor -logFile /dev/stdout -quit -returnlicense
                 '''
                 // pick up archive xcode project
                 dir("${env.UNITY_PROJECT_DIR}") {
