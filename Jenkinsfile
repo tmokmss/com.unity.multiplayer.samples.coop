@@ -61,9 +61,9 @@ pipeline {
                 ./aws/install
                 # https://game.ci/docs/github/activation
                 aws secretsmanager get-secret-value --secret-id unity-secret --query 'SecretString' > secret.txt
-                export UNITY_SERIAL=$(cat secret.txt | jq 'fromjson | .SERIAL')
-                export UNITY_EMAIL=$(cat secret.txt | jq 'fromjson | .EMAIL')
-                export UNITY_PASSWORD=$(cat secret.txt | jq 'fromjson | .PASSWORD')
+                export UNITY_SERIAL=$(cat secret.txt | jq -r 'fromjson | .SERIAL')
+                export UNITY_EMAIL=$(cat secret.txt | jq -r 'fromjson | .EMAIL')
+                export UNITY_PASSWORD=$(cat secret.txt | jq -r 'fromjson | .PASSWORD')
                 mkdir -p ./iOSProj
                 mkdir -p ./Build/iosBuild
                 unity-editor \
