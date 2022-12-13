@@ -72,6 +72,7 @@ pipeline {
                     -customBuildTarget iOS \
                     -customBuildName iosBuild \
                     -customBuildPath ./Build/iosBuild \
+                    -projectPath "./" \
                     -username "\$UNITY_EMAIL" \
                     -password "\$UNITY_PASSWORD" \
                     -serial "\$UNITY_SERIAL" \
