@@ -81,7 +81,7 @@ pipeline {
                 zip -r iOSProj iOSProj
                 '''
                 // pick up archive xcode project
-                dir("${env.UNITY_PROJECT_DIR}") {
+                dir("") {
                     stash includes: 'iOSProj.zip', name: 'xcode-project'
                 }
             }
