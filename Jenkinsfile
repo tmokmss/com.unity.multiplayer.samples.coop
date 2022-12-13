@@ -41,7 +41,7 @@ pipeline {
         stage('build Unity project on spot') {
             agent {
                 docker {
-                    image 'unityci/editor:2021.3.6f1-ios-1.0'
+                    image 'unityci/editor:2021.3.12f1-ios-1.0'
                     args '-u root:root'
                 }
             }
