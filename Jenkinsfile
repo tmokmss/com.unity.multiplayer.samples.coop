@@ -22,7 +22,7 @@ pipeline {
     environment {
         UNITY_PROJECT_DIR='UnityProjectSample'
         IMAGE='unityci/editor'
-        UNITY_VERSION='2021.3.6f1-ios-1.0'
+        UNITY_VERSION='2021.3.12f1-ios-1.0'
         // Build parameters
         UNITY_LICENSE_FILE='UNITY_LICENSE_FILE'
         PROVISIONING_PROFILE_NAME='UnityBuildSample-profile'
@@ -38,10 +38,8 @@ pipeline {
     }
 
     stages {
-        
         stage('build Unity project on spot') {
             agent {
-
                 docker {
                     image 'unityci/editor:2021.3.6f1-ios-1.0'
                     args '-u root:root'
@@ -78,10 +76,9 @@ pipeline {
                     -username "\$UNITY_EMAIL" \
                     -password "\$UNITY_PASSWORD" \
                     -serial "\$UNITY_SERIAL" \
-                #    -logFile /dev/stdout
+                    -logFile /dev/stdout
                 echo "===Zipping Xcode project"
                 zip -r iOSProj iOSProj
-                unity-editor -logFile /dev/stdout -quit -returnlicense
                 '''
                 // pick up archive xcode project
                 dir("${env.UNITY_PROJECT_DIR}") {
@@ -90,7 +87,7 @@ pipeline {
             }
             post {
                 always {
-                    sh "unity-editor -logFile /dev/stdout -quit -returnlicense"
+                    sh "unity-editor -quit -returnlicense"
                     sh "chmod -R 777 ."
                 }
             }
@@ -104,7 +101,7 @@ pipeline {
                 label "mac"
             }
             environment {
-                HOME_FOLDER='/Users/jenkins'
+                HOME_FOLDER='/Users/ec2-user/jenkins'
                 PROJECT_FOLDER='iOSProj'
             }
             steps {
