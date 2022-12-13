@@ -76,7 +76,7 @@ pipeline {
                     -username "\$UNITY_EMAIL" \
                     -password "\$UNITY_PASSWORD" \
                     -serial "\$UNITY_SERIAL" \
-                    -logFile /dev/stdout
+                    # -logFile /dev/stdout
                 echo "===Zipping Xcode project"
                 zip -r iOSProj iOSProj
                 '''
