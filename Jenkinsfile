@@ -53,7 +53,7 @@ pipeline {
                 echo "===Installing stuff for unity"
                 apt-get update
                 apt-get install -y curl unzip zip jq
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" 
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                 unzip -q -o awscliv2.zip
                 ./aws/install
                 # https://game.ci/docs/github/activation
@@ -78,7 +78,7 @@ pipeline {
                     -serial "\$UNITY_SERIAL" \
                     # -logFile /dev/stdout
                 echo "===Zipping Xcode project"
-                zip -r iOSProj iOSProj
+                zip -q -r iOSProj iOSProj
                 '''
                 // pick up archive xcode project
                 dir("") {
