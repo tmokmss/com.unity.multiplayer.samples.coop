@@ -103,6 +103,9 @@ pipeline {
             environment {
                 HOME_FOLDER='/Users/ec2-user/jenkins'
                 PROJECT_FOLDER='iOSProj'
+                CERT_PRIVATE = credentials('priv')
+                CERT_SIGNATURE = credentials('development')
+                BUILD_SECRET_JSON = credentials('ios-build-secret')
             }
             steps {
                 unstash 'xcode-project'
@@ -126,20 +129,17 @@ pipeline {
                 </plist> 
                 """
 
+
                 sh '''
                 PATH=$PATH:/usr/local/bin
                 cd ${PROJECT_FOLDER}
-                # Update project settings
-                # sed -i "" 's|^#!/bin/sh|#!/bin/bash|' MapFileParser.sh
-                # extra backslash for groovy
-                TEAM_ID=`aws secretsmanager get-secret-value \
-                    --secret-id $TEAM_ID_KEY --output text --query 'SecretString' | cut -d '"' -f4`
+                TEAM_ID=$(echo $BUILD_SECRET_JSON | jq -r '.TEAM_ID')
+                BUNDLE_ID=$(echo $BUILD_SECRET_JSON | jq -r '.BUNDLE_ID')
                 # extra backslash for groovy
                 sed -i "" "s/DEVELOPMENT_TEAM = \\"\\"/DEVELOPMENT_TEAM = $TEAM_ID/g" Unity-iPhone.xcodeproj/project.pbxproj
                 #############################################
                 # setup certificates in a temporary keychain
                 #############################################
-                
                 echo "===Setting up a temporary keychain"
                 pwd
                 # Unique keychain ID
@@ -157,15 +157,10 @@ pipeline {
                 security unlock-keychain -p "$MY_KEYCHAIN_PASSWORD" "$MY_KEYCHAIN"
                 echo "===Importing certs"
                 # Import certs to a keychain; bash process substitution doesn't work with security for some reason
-                aws secretsmanager get-secret-value --secret-id $SIGNING_CERT --output text --query SecretBinary |
-                    base64 -d -o /tmp/cert &&
-                    security -v import /tmp/cert -k "$MY_KEYCHAIN" -T "/usr/bin/codesign"
+                security -v import $CERT_SIGNATURE -k "$MY_KEYCHAIN" -T "/usr/bin/codesign"
                 rm /tmp/cert
-                PASSPHRASE=`aws secretsmanager get-secret-value \
-                    --secret-id $SIGNING_CERT_PRIV_KEY_PASSPHRASE --output text --query 'SecretString' | cut -d '"' -f4`
-                aws secretsmanager get-secret-value --secret-id $SIGNING_CERT_PRIV_KEY --output text --query SecretBinary |
-                    base64 -d -o /tmp/priv.p12 &&
-                    security -v import /tmp/priv.p12 -k "$MY_KEYCHAIN" -P "$PASSPHRASE" -t priv -T "/usr/bin/codesign" 
+                PASSPHRASE=""
+                security -v import $CERT_PRIVATE -k "$MY_KEYCHAIN" -P "$PASSPHRASE" -t priv -T "/usr/bin/codesign" 
                 rm /tmp/priv.p12; PASSPHRASE=''
                 #aws secretsmanager get-secret-value --secret-id $APPLE_WWDR_CERT --output text --query SecretBinary |
                 #    base64 -d -o /tmp/cert &&
@@ -210,7 +205,9 @@ pipeline {
                 echo ===Building 
                 pwd
                 # xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER_APP="$PROVISIONING_PROFILE_NAME" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0
+
                 xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0 CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO 
+
                 # Generate ipa
                 echo ===Exporting ipa
                 pwd
