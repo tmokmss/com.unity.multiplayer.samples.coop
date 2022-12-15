@@ -158,10 +158,10 @@ pipeline {
                 echo "===Importing certs"
                 # Import certs to a keychain; bash process substitution doesn't work with security for some reason
                 security -v import $CERT_SIGNATURE -k "$MY_KEYCHAIN" -T "/usr/bin/codesign"
-                rm /tmp/cert
+                #rm /tmp/cert
                 PASSPHRASE=""
                 security -v import $CERT_PRIVATE -k "$MY_KEYCHAIN" -P "$PASSPHRASE" -t priv -T "/usr/bin/codesign" 
-                rm /tmp/priv.p12; PASSPHRASE=''
+                #rm /tmp/priv.p12; PASSPHRASE=''
                 #aws secretsmanager get-secret-value --secret-id $APPLE_WWDR_CERT --output text --query SecretBinary |
                 #    base64 -d -o /tmp/cert &&
                 #    security -v import /tmp/cert -k "$MY_KEYCHAIN"
