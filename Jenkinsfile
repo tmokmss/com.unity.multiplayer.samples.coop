@@ -54,7 +54,7 @@ pipeline {
                 # Unity Build Serverを使う場合:
                 mkdir -p /usr/share/unity3d/config/
                 echo '{
-                "licensingServiceBaseUrl": "'"$UNITY_BUILD_SERVER_HOST"'",
+                "licensingServiceBaseUrl": "'"$UNITY_BUILD_SERVER_URL"'",
                 "enableEntitlementLicensing": true,
                 "enableFloatingApi": true,
                 "clientConnectTimeoutSec": 5,
