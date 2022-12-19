@@ -84,7 +84,8 @@ pipeline {
             }
             post {
                 always {
-                    sh 'unity-editor -quit -returnlicense'
+                    // Unity Build Server利用時は不要
+                    // sh 'unity-editor -quit -returnlicense'
                     sh 'chmod -R 777 .'
                 }
             }
