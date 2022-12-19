@@ -21,6 +21,7 @@ pipeline {
 
     environment {
         // Build parameters
+        ADD_VARIABLES_HERE=''
     }
 
     stages {
