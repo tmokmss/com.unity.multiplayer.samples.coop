@@ -37,8 +37,6 @@ pipeline {
                 sh '''#!/bin/bash
                 set -xe
                 printenv
-                echo ${env.UNITY_BUILD_SERVER_HOST}
-                echo ${env.ARTIFACT_BUCKET_NAME}
                 ls -la
                 echo "===Installing stuff for unity"
                 apt-get update
@@ -46,11 +44,21 @@ pipeline {
                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                 unzip -q -o awscliv2.zip
                 ./aws/install
+                # Unity Proライセンスを使う場合: AWS SecretsManagerから必要な情報を読み込む
                 # https://game.ci/docs/github/activation
-                aws secretsmanager get-secret-value --secret-id unity-secret --query 'SecretString' > secret.txt
-                export UNITY_SERIAL=$(cat secret.txt | jq -r 'fromjson | .SERIAL')
-                export UNITY_EMAIL=$(cat secret.txt | jq -r 'fromjson | .EMAIL')
-                export UNITY_PASSWORD=$(cat secret.txt | jq -r 'fromjson | .PASSWORD')
+                # aws secretsmanager get-secret-value --secret-id unity-secret --query 'SecretString' > secret.txt
+                # export UNITY_SERIAL=$(cat secret.txt | jq -r 'fromjson | .SERIAL')
+                # export UNITY_EMAIL=$(cat secret.txt | jq -r 'fromjson | .EMAIL')
+                # export UNITY_PASSWORD=$(cat secret.txt | jq -r 'fromjson | .PASSWORD')
+
+                # Unity Build Serverを使う場合:
+                mkdir -p /usr/share/unity3d/config/
+                echo '{
+                "licensingServiceBaseUrl": "'"$UNITY_BUILD_SERVER_HOST"'",
+                "enableEntitlementLicensing": true,
+                "enableFloatingApi": true,
+                "clientConnectTimeoutSec": 5,
+                "clientHandshakeTimeoutSec": 10}' > /usr/share/unity3d/config/services-config.json
                 mkdir -p ./iOSProj
                 mkdir -p ./Build/iosBuild
                 unity-editor \
@@ -66,7 +74,6 @@ pipeline {
                     -username "\$UNITY_EMAIL" \
                     -password "\$UNITY_PASSWORD" \
                     -serial "\$UNITY_SERIAL" \
-                    # -logFile /dev/stdout
                 echo "===Zipping Xcode project"
                 zip -q -r iOSProj iOSProj
                 '''
