@@ -37,6 +37,8 @@ pipeline {
                 sh '''#!/bin/bash
                 set -xe
                 printenv
+                echo ${env.UNITY_BUILD_SERVER_HOST}
+                echo ${env.ARTIFACT_BUCKET_NAME}
                 ls -la
                 echo "===Installing stuff for unity"
                 apt-get update
