@@ -101,7 +101,7 @@ pipeline {
                 pwd
                 ls -l
                 # Remove old project and unpack a new one
-                rm -rf ${PROJECT_FOLDER}
+                sudo rm -rf ${PROJECT_FOLDER}
                 unzip iOSProj.zip
                 '''
 
