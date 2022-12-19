@@ -71,9 +71,9 @@ pipeline {
                     -customBuildName iosBuild \
                     -customBuildPath ./Build/iosBuild \
                     -projectPath "./" \
-                    -username "\$UNITY_EMAIL" \
-                    -password "\$UNITY_PASSWORD" \
-                    -serial "\$UNITY_SERIAL" \
+                #    -username "\$UNITY_EMAIL" \
+                #    -password "\$UNITY_PASSWORD" \
+                #    -serial "\$UNITY_SERIAL" \
                 echo "===Zipping Xcode project"
                 zip -q -r iOSProj iOSProj
                 '''
