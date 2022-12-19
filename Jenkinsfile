@@ -185,6 +185,7 @@ pipeline {
                 #############################################
                 # Delete keychain - should be moved to a post step, but this would require a global variable or smth
                 sudo security delete-keychain "$MY_KEYCHAIN"
+                '''
             }
             post {
                 always {
