@@ -20,8 +20,7 @@ pipeline {
     agent none
 
     environment {
-        // Build parameters
-        ADD_VARIABLES_HERE=''
+        ARTIFACT_BUCKET_NAME = env.ARTIFACT_BUCKET_NAME
     }
 
     stages {
@@ -32,9 +31,16 @@ pipeline {
                     args '-u root:root'
                 }
             }
+            environment {
+                UNITY_BUILD_SERVER_HOST = env.UNITY_BUILD_SERVER_HOST
+            }
             steps {
                 // install stuff for Unity, build xcode project, archive the result
                 sh '''#!/bin/bash
+                echo \$UNITY_BUILD_SERVER_HOST
+                echo $UNITY_BUILD_SERVER_HOST
+                echo \$ARTIFACT_BUCKET_NAME
+                echo $ARTIFACT_BUCKET_NAME
                 set -xe
                 printenv
                 ls -la
