@@ -131,32 +131,32 @@ pipeline {
                 # Unique keychain ID
                 MY_KEYCHAIN="temp.keychain.`uuidgen`"
                 MY_KEYCHAIN_PASSWORD="secret"
-                security create-keychain -p "$MY_KEYCHAIN_PASSWORD" "$MY_KEYCHAIN"
+                sudo security create-keychain -p "$MY_KEYCHAIN_PASSWORD" "$MY_KEYCHAIN"
                 # Append the temporary keychain to the user search list
                 # double backslash for groovy
-                security list-keychains -d user -s "$MY_KEYCHAIN" $(security list-keychains -d user | sed s/\\"//g)
+                sudo security list-keychains -d user -s "$MY_KEYCHAIN" $(security list-keychains -d user | sed s/\\"//g)
                 # Output user keychain search list for debug
-                security list-keychains -d user
+                sudo security list-keychains -d user
                 # Disable lock timeout (set to "no timeout")
-                security set-keychain-settings "$MY_KEYCHAIN"
+                sudo security set-keychain-settings "$MY_KEYCHAIN"
                 # Unlock keychain
-                security unlock-keychain -p "$MY_KEYCHAIN_PASSWORD" "$MY_KEYCHAIN"
+                sudo security unlock-keychain -p "$MY_KEYCHAIN_PASSWORD" "$MY_KEYCHAIN"
                 echo "===Importing certs"
                 # Import certs to a keychain; bash process substitution doesn't work with security for some reason
-                security -v import $CERT_SIGNATURE -k "$MY_KEYCHAIN" -T "/usr/bin/codesign"
+                sudo security -v import $CERT_SIGNATURE -k "$MY_KEYCHAIN" -T "/usr/bin/codesign"
                 #rm /tmp/cert
                 PASSPHRASE=""
-                security -v import $CERT_PRIVATE -k "$MY_KEYCHAIN" -P "$PASSPHRASE" -t priv -T "/usr/bin/codesign"
+                sudo security -v import $CERT_PRIVATE -k "$MY_KEYCHAIN" -P "$PASSPHRASE" -t priv -T "/usr/bin/codesign"
                 # Dump keychain for debug
-                security dump-keychain "$MY_KEYCHAIN"
+                sudo security dump-keychain "$MY_KEYCHAIN"
                 # Set partition list (ACL) for a key
-                security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $MY_KEYCHAIN_PASSWORD $MY_KEYCHAIN
+                sudo security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $MY_KEYCHAIN_PASSWORD $MY_KEYCHAIN
                 # Get signing identity for xcodebuild command
-                security find-identity -v -p codesigning $MY_KEYCHAIN
+                sudo security find-identity -v -p codesigning $MY_KEYCHAIN
                 # double backslash for groovy
                 CODE_SIGN_IDENTITY=`security find-identity -v -p codesigning $MY_KEYCHAIN | awk '/ *1\\)/ {print $2}'`
                 echo code signing identity is $CODE_SIGN_IDENTITY
-                security default-keychain -s $MY_KEYCHAIN
+                sudo security default-keychain -s $MY_KEYCHAIN
 
                 #############################################
                 # Build
@@ -164,7 +164,7 @@ pipeline {
                 echo ===Building
                 pwd
 
-                xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0 CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+                sudo xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0 CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
                 # Generate ipa
                 echo ===Exporting ipa
@@ -180,7 +180,7 @@ pipeline {
                 # Cleanup
                 #############################################
                 # Delete keychain - should be moved to a post step, but this would require a global variable or smth
-                security delete-keychain "$MY_KEYCHAIN"
+                sudo security delete-keychain "$MY_KEYCHAIN"
                 # Delete a provisioning profile if no jobs use it anymore
                 n=0
                 if [ -f "${PROV_PROFILE_FILENAME}.lock" ]; then
