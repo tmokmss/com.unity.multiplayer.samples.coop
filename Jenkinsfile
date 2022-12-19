@@ -20,20 +20,7 @@ pipeline {
     agent none
 
     environment {
-        UNITY_PROJECT_DIR='UnityProjectSample'
-        IMAGE='unityci/editor'
         // Build parameters
-        UNITY_LICENSE_FILE='UNITY_LICENSE_FILE'
-        PROVISIONING_PROFILE_NAME='UnityBuildSample-profile'
-        // secret from Secrets Manager
-        UNIRT_SECRET_NAME='unity-secret'
-        TEAM_ID_KEY='TEAM_ID'
-        LICENSE_SERVER_ENDPOINT='LICENSE_SERVER_ENDPOINT'
-        SIGNING_CERT='SIGNING_CERT'
-        SIGNING_CERT_PRIV_KEY='SIGNING_CERT_PRIV_KEY'
-        SIGNING_CERT_PRIV_KEY_PASSPHRASE='SIGNING_CERT_PRIV_KEY_PASSPHRASE'
-        APPLE_WWDR_CERT='APPLE_WWDR_CERT'
-        PROVISIONING_PROFILE='PROVISIONING_PROFILE'
     }
 
     stages {
@@ -81,28 +68,28 @@ pipeline {
                 zip -q -r iOSProj iOSProj
                 '''
                 // pick up archive xcode project
-                dir("") {
+                dir('') {
                     stash includes: 'iOSProj.zip', name: 'xcode-project'
                 }
             }
             post {
                 always {
-                    sh "unity-editor -quit -returnlicense"
-                    sh "chmod -R 777 ."
+                    sh 'unity-editor -quit -returnlicense'
+                    sh 'chmod -R 777 .'
                 }
             }
         }
-        stage('build and sign iOS app on mac'){
+        stage('build and sign iOS app on mac') {
             // we don't need the source code for this stage
             options {
                 skipDefaultCheckout()
             }
             agent {
-                label "mac"
+                label 'mac'
             }
             environment {
-                HOME_FOLDER='/Users/ec2-user/jenkins'
-                PROJECT_FOLDER='iOSProj'
+                HOME_FOLDER = '/Users/ec2-user/jenkins'
+                PROJECT_FOLDER = 'iOSProj'
                 CERT_PRIVATE = credentials('priv')
                 CERT_SIGNATURE = credentials('development')
                 BUILD_SECRET_JSON = credentials('ios-build-secret')
@@ -126,9 +113,8 @@ pipeline {
                     <key>signingStyle</key>
                     <string>manual</string>
                 </dict>
-                </plist> 
+                </plist>
                 """
-
 
                 sh '''
                 source ~/.zshrc
@@ -160,12 +146,7 @@ pipeline {
                 security -v import $CERT_SIGNATURE -k "$MY_KEYCHAIN" -T "/usr/bin/codesign"
                 #rm /tmp/cert
                 PASSPHRASE=""
-                security -v import $CERT_PRIVATE -k "$MY_KEYCHAIN" -P "$PASSPHRASE" -t priv -T "/usr/bin/codesign" 
-                #rm /tmp/priv.p12; PASSPHRASE=''
-                #aws secretsmanager get-secret-value --secret-id $APPLE_WWDR_CERT --output text --query SecretBinary |
-                #    base64 -d -o /tmp/cert &&
-                #    security -v import /tmp/cert -k "$MY_KEYCHAIN"
-                #rm /tmp/cert
+                security -v import $CERT_PRIVATE -k "$MY_KEYCHAIN" -P "$PASSPHRASE" -t priv -T "/usr/bin/codesign"
                 # Dump keychain for debug
                 security dump-keychain "$MY_KEYCHAIN"
                 # Set partition list (ACL) for a key
@@ -176,49 +157,25 @@ pipeline {
                 CODE_SIGN_IDENTITY=`security find-identity -v -p codesigning $MY_KEYCHAIN | awk '/ *1\\)/ {print $2}'`
                 echo code signing identity is $CODE_SIGN_IDENTITY
                 security default-keychain -s $MY_KEYCHAIN
-                #############################################
-                # setup provisioning profile
-                #############################################
-                
-                echo ===setting up a provisioning profile
-                pwd
-                
-                # # if the provisioning profile already exists, don't overwrite
-                # PROV_PROFILE_FILENAME="${HOME}/Library/MobileDevice/Provisioning Profiles/${PROVISIONING_PROFILE_NAME}.mobileprovision"
-                
-                # if [ ! -f "$PROV_PROFILE_FILENAME" ]; then 
-                #     aws secretsmanager get-secret-value --secret-id $PROVISIONING_PROFILE --output text --query SecretBinary |
-                #         base64 -d -o "${PROV_PROFILE_FILENAME}"
-                # fi
-                # # lock, since multiple jobs can use the same provisioning profile
-                # if [ -f "${PROV_PROFILE_FILENAME}.lock" ]; then
-                #     n=`cat "${PROV_PROFILE_FILENAME}.lock"`
-                #     n=$((n+1))
-                # else
-                #     n=1
-                # fi
-                # echo $n > "${PROV_PROFILE_FILENAME}.lock" 
-                
+
                 #############################################
                 # Build
                 #############################################
-                echo ===Building 
+                echo ===Building
                 pwd
-                # xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" PROVISIONING_PROFILE_SPECIFIER_APP="$PROVISIONING_PROFILE_NAME" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0
 
-                xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0 CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO 
+                xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0 CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
                 # Generate ipa
                 echo ===Exporting ipa
                 pwd
                 # xcodebuild -exportArchive -archivePath "$PWD/build/Unity-iPhone.xcarchive" -exportOptionsPlist ExportOptions.plist -exportPath "$PWD/build"
-                
-                
+
                 #############################################
                 # Upload
                 #############################################
                 # Upload to S3
-                # /usr/local/bin/aws s3 cp ./build/*.ipa s3://${S3_BUCKET}/ 
+                # /usr/local/bin/aws s3 cp ./build/*.ipa s3://${S3_BUCKET}/
                 #############################################
                 # Cleanup
                 #############################################
@@ -241,7 +198,7 @@ pipeline {
                 always {
                     sh '''
                     #############################################
-                    # cleanup 
+                    # cleanup
                     #############################################
                     zip -r iOSProj/build/Unity-iPhone.zip iOSProj/build/Unity-iPhone.xcarchive
                     '''
@@ -259,4 +216,3 @@ pipeline {
         }
     }
 }
-
