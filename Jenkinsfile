@@ -129,6 +129,7 @@ pipeline {
                 #############################################
                 echo "===Setting up a temporary keychain"
                 pwd
+                # security コマンドがec2-userではpermission errorになることがあるので、sudoで実行する
                 # Unique keychain ID
                 MY_KEYCHAIN="temp.keychain.`uuidgen`"
                 MY_KEYCHAIN_PASSWORD="secret"
@@ -172,6 +173,8 @@ pipeline {
                 pwd
                 # xcodebuild -exportArchive -archivePath "$PWD/build/Unity-iPhone.xcarchive" -exportOptionsPlist ExportOptions.plist -exportPath "$PWD/build"
 
+                sudo chown -R ec2-user "$PWD/build"
+
                 #############################################
                 # Upload
                 #############################################
@@ -182,18 +185,6 @@ pipeline {
                 #############################################
                 # Delete keychain - should be moved to a post step, but this would require a global variable or smth
                 sudo security delete-keychain "$MY_KEYCHAIN"
-                # Delete a provisioning profile if no jobs use it anymore
-                n=0
-                if [ -f "${PROV_PROFILE_FILENAME}.lock" ]; then
-                    n=`cat "${PROV_PROFILE_FILENAME}.lock"`
-                    n=$((n-1))
-                    echo $n > "${PROV_PROFILE_FILENAME}.lock"
-                fi
-                if [ "$n" -le "0" ]; then
-                    rm -f "${PROV_PROFILE_FILENAME}"
-                    rm -f "${PROV_PROFILE_FILENAME}.lock"
-                fi
-                '''
             }
             post {
                 always {
