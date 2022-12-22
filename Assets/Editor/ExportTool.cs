@@ -23,6 +23,7 @@ using System.Collections.Generic;
 
 class ExportTool
 {
+	[MenuItem ("Examples/Build iOS")]
 	static void ExportXcodeProject () 
 	{
 		PlayerSettings.applicationIdentifier = "com.evgeniik.samples.UnityBuildSample";
