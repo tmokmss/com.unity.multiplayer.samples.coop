@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
+// https://qiita.com/beckyJPN/items/e61834c4b92112bc872d/
 public static class Builder
 {
     [MenuItem ("Examples/Build Android")]
