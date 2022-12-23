@@ -43,7 +43,7 @@ pipeline {
                         -customBuildPath ./Build/iosBuild \
                         -projectPath "./" \
                     echo "===Zipping Xcode project"
-                    zip -q -r -0 iOSProj iOSProj
+                    zip -q -r iOSProj iOSProj
                     '''
                 }
                 // pick up archive xcode project
