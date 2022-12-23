@@ -97,7 +97,7 @@ pipeline {
                 """
 
                 sh '''#!/bin/zsh
-                set -xe
+                # set -xe
                 source ~/.zshrc
                 # 必要なパスを通す
                 export PATH=/usr/local/bin:/opt/homebrew/bin:\${PATH}
