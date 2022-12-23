@@ -11,7 +11,7 @@ pipeline {
             }
 
             steps {
-                cache(maxCacheSize: 5000, caches: [arbitraryFileCache(path: './Library', compressionMethod: 'NONE')]) {
+                cache(maxCacheSize: 5000, caches: [arbitraryFileCache(path: './Library', compressionMethod: 'TARGZ')]) {
                     // install stuff for Unity, build xcode project, archive the result
                     sh '''#!/bin/bash
                     set -xe
@@ -42,7 +42,7 @@ pipeline {
                         -customBuildPath ./Build/iosBuild \
                         -projectPath "./" \
                     echo "===Zipping Xcode project"
-                    zip -q -r iOSProj iOSProj
+                    zip -q -r -0 iOSProj iOSProj
                     '''
                 }
                 // pick up archive xcode project
@@ -75,11 +75,12 @@ pipeline {
             steps {
                 unstash 'xcode-project'
                 sh '''#!/bin/zsh
-                pwd
+                set -xe
+                printenv
                 ls -l
                 # Remove old project and unpack a new one
                 sudo rm -rf ${PROJECT_FOLDER}
-                unzip iOSProj.zip
+                unzip -q iOSProj.zip
                 '''
 
                 // create export options file
@@ -95,6 +96,8 @@ pipeline {
                 """
 
                 sh '''#!/bin/zsh
+                set -xe
+                source ~/.zshrc
                 cd ${PROJECT_FOLDER}
                 TEAM_ID=$(echo $BUILD_SECRET_JSON | jq -r '.TEAM_ID')
                 BUNDLE_ID=$(echo $BUILD_SECRET_JSON | jq -r '.BUNDLE_ID')
