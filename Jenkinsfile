@@ -144,6 +144,7 @@ pipeline {
                 CODE_SIGN_IDENTITY=`security find-identity -v -p codesigning $MY_KEYCHAIN | awk '/ *1\\)/ {print $2}'`
                 echo code signing identity is $CODE_SIGN_IDENTITY
                 sudo security default-keychain -s $MY_KEYCHAIN
+                echo $MY_MY_KEYCHAIN > keychain.txt
 
                 #############################################
                 # Build
@@ -159,17 +160,7 @@ pipeline {
                 # xcodebuild -exportArchive -archivePath "$PWD/build/Unity-iPhone.xcarchive" -exportOptionsPlist ExportOptions.plist -exportPath "$PWD/build"
 
                 sudo chown -R ec2-user "$PWD/build"
-
-                #############################################
-                # Upload
-                #############################################
-                # Upload to S3
-                # /usr/local/bin/aws s3 cp ./build/*.ipa s3://${S3_BUCKET}/
-                #############################################
-                # Cleanup
-                #############################################
-                # Delete keychain - should be moved to a post step, but this would require a global variable or smth
-                sudo security delete-keychain "$MY_KEYCHAIN"
+                zip -r iOSProj/build/Unity-iPhone.zip iOSProj/build/Unity-iPhone.xcarchive
                 '''
             }
             post {
@@ -178,7 +169,8 @@ pipeline {
                     #############################################
                     # cleanup
                     #############################################
-                    zip -r iOSProj/build/Unity-iPhone.zip iOSProj/build/Unity-iPhone.xcarchive
+                    security delete-keychain $(cat keychain.txt)
+                    rm keychain.txt
                     '''
                     archiveArtifacts artifacts: '**/Unity-iPhone.zip', onlyIfSuccessful: true, caseSensitive: false
                 }
