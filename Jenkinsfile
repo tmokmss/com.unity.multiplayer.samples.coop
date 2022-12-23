@@ -11,7 +11,7 @@ pipeline {
             }
 
             steps {
-                cache(maxCacheSize: 1000, caches: [arbitraryFileCache(path: './', compressionMethod: 'TARGZ')]) {
+                cache(maxCacheSize: 5000, caches: [arbitraryFileCache(path: './', compressionMethod: 'TARGZ')]) {
                     // install stuff for Unity, build xcode project, archive the result
                     sh '''#!/bin/bash
                     set -xe
