@@ -84,7 +84,7 @@ pipeline {
                 ls -l
                 # Remove old project and unpack a new one
                 sudo rm -rf ${PROJECT_FOLDER}
-                unzip iOSProj.zip
+                unzip -q iOSProj.zip
                 '''
 
                 // create export options file
