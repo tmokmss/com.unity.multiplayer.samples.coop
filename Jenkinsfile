@@ -97,7 +97,8 @@ pipeline {
 
                 sh '''#!/bin/zsh
                 set -xe
-                source ~/.zshrc
+                # 必要なパスを通す
+                export PATH=/usr/local/bin:/opt/homebrew/bin:\${PATH}
                 cd ${PROJECT_FOLDER}
                 TEAM_ID=$(echo $BUILD_SECRET_JSON | jq -r '.TEAM_ID')
                 BUNDLE_ID=$(echo $BUILD_SECRET_JSON | jq -r '.BUNDLE_ID')
