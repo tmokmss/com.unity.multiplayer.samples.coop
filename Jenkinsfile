@@ -74,7 +74,7 @@ pipeline {
             }
             steps {
                 unstash 'xcode-project'
-                sh '''
+                sh '''#!/bin/zsh
                 pwd
                 ls -l
                 # Remove old project and unpack a new one
@@ -94,8 +94,7 @@ pipeline {
                 </plist>
                 """
 
-                sh '''
-                source ~/.zshrc
+                sh '''#!/bin/zsh
                 cd ${PROJECT_FOLDER}
                 TEAM_ID=$(echo $BUILD_SECRET_JSON | jq -r '.TEAM_ID')
                 BUNDLE_ID=$(echo $BUILD_SECRET_JSON | jq -r '.BUNDLE_ID')
