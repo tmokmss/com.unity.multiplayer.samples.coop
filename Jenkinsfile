@@ -78,7 +78,7 @@ pipeline {
             }
             steps {
                 unstash 'xcode-project'
-                sh '''#!/bin/zsh
+                sh '''
                 set -xe
                 printenv
                 ls -l
@@ -99,7 +99,7 @@ pipeline {
                 </plist>
                 """
 
-                sh '''#!/bin/zsh
+                sh '''
                 # set -xe
                 source ~/.zshrc
                 # 必要なパスを通す
