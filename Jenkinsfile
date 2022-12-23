@@ -162,8 +162,10 @@ pipeline {
                     #############################################
                     # cleanup
                     #############################################
-                    security delete-keychain $(cat keychain.txt)
-                    rm keychain.txt
+                    if [ -f "keychain.txt" ]; then
+                        security delete-keychain $(cat keychain.txt)
+                        rm keychain.txt
+                    fi
                     '''
                     archiveArtifacts artifacts: '**/Unity-iPhone.zip', onlyIfSuccessful: true, caseSensitive: false
                 }
