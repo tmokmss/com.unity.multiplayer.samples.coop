@@ -153,7 +153,7 @@ pipeline {
 
                 xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0 CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
-                zip -r iOSProj/build/Unity-iPhone.zip iOSProj/build/Unity-iPhone.xcarchive
+                zip -r build/Unity-iPhone.zip build/Unity-iPhone.xcarchive
                 '''
             }
             post {
@@ -167,7 +167,7 @@ pipeline {
                         rm keychain.txt
                     fi
                     '''
-                    archiveArtifacts artifacts: '**/Unity-iPhone.zip', onlyIfSuccessful: true, caseSensitive: false
+                    archiveArtifacts artifacts: 'iOSProj/build/Unity-iPhone.zip', onlyIfSuccessful: true, caseSensitive: false
                 }
             }
         }
