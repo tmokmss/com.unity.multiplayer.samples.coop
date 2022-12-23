@@ -1,28 +1,5 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * SPDX-License-Identifier: MIT-0
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this
- * software and associated documentation files (the "Software"), to deal in the Software
- * without restriction, including without limitation the rights to use, copy, modify,
- * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 pipeline {
     agent none
-
-    environment {
-        // Build parameters
-        ADD_VARIABLES_HERE=''
-    }
 
     stages {
         stage('build Unity project on spot') {
@@ -32,51 +9,42 @@ pipeline {
                     args '-u root:root'
                 }
             }
-            steps {
-                // install stuff for Unity, build xcode project, archive the result
-                sh '''#!/bin/bash
-                set -xe
-                printenv
-                ls -la
-                echo "===Installing stuff for unity"
-                apt-get update
-                apt-get install -y curl unzip zip jq
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                unzip -q -o awscliv2.zip
-                ./aws/install
-                # Unity Proライセンスを使う場合: AWS SecretsManagerから必要な情報を読み込む
-                # https://game.ci/docs/github/activation
-                # aws secretsmanager get-secret-value --secret-id unity-secret --query 'SecretString' > secret.txt
-                # export UNITY_SERIAL=$(cat secret.txt | jq -r 'fromjson | .SERIAL')
-                # export UNITY_EMAIL=$(cat secret.txt | jq -r 'fromjson | .EMAIL')
-                # export UNITY_PASSWORD=$(cat secret.txt | jq -r 'fromjson | .PASSWORD')
 
-                # Unity Build Serverを使う場合:
-                mkdir -p /usr/share/unity3d/config/
-                echo '{
-                "licensingServiceBaseUrl": "'"$UNITY_BUILD_SERVER_URL"'",
-                "enableEntitlementLicensing": true,
-                "enableFloatingApi": true,
-                "clientConnectTimeoutSec": 5,
-                "clientHandshakeTimeoutSec": 10}' > /usr/share/unity3d/config/services-config.json
-                mkdir -p ./iOSProj
-                mkdir -p ./Build/iosBuild
-                unity-editor \
-                    -quit \
-                    -batchmode \
-                    -nographics \
-                    -executeMethod ExportTool.ExportXcodeProject \
-                    -buildTarget iOS \
-                    -customBuildTarget iOS \
-                    -customBuildName iosBuild \
-                    -customBuildPath ./Build/iosBuild \
-                    -projectPath "./" \
-                #    -username "\$UNITY_EMAIL" \
-                #    -password "\$UNITY_PASSWORD" \
-                #    -serial "\$UNITY_SERIAL" \
-                echo "===Zipping Xcode project"
-                zip -q -r iOSProj iOSProj
-                '''
+            steps {
+                cache(maxCacheSize: 1000, caches: [arbitraryFileCache(path: './', compressionMethod: 'TARGZ')]) {
+                    // install stuff for Unity, build xcode project, archive the result
+                    sh '''#!/bin/bash
+                    set -xe
+                    printenv
+                    ls -la
+                    echo "===Installing stuff for unity"
+                    apt-get update
+                    apt-get install -y curl unzip zip jq
+
+                    # Unity Build Serverを使う場合:
+                    mkdir -p /usr/share/unity3d/config/
+                    echo '{
+                    "licensingServiceBaseUrl": "'"$UNITY_BUILD_SERVER_URL"'",
+                    "enableEntitlementLicensing": true,
+                    "enableFloatingApi": true,
+                    "clientConnectTimeoutSec": 5,
+                    "clientHandshakeTimeoutSec": 10}' > /usr/share/unity3d/config/services-config.json
+                    mkdir -p ./iOSProj
+                    mkdir -p ./Build/iosBuild
+                    unity-editor \
+                        -quit \
+                        -batchmode \
+                        -nographics \
+                        -executeMethod ExportTool.ExportXcodeProject \
+                        -buildTarget iOS \
+                        -customBuildTarget iOS \
+                        -customBuildName iosBuild \
+                        -customBuildPath ./Build/iosBuild \
+                        -projectPath "./" \
+                    echo "===Zipping Xcode project"
+                    zip -q -r iOSProj iOSProj
+                    '''
+                }
                 // pick up archive xcode project
                 dir('') {
                     stash includes: 'iOSProj.zip', name: 'xcode-project'
@@ -84,7 +52,7 @@ pipeline {
             }
             post {
                 always {
-                    // Unity Build Server利用時は不要
+                    // Unity Build Server利用時は明示的なライセンス返却処理は不要
                     // sh 'unity-editor -quit -returnlicense'
                     sh 'chmod -R 777 .'
                 }
@@ -99,7 +67,6 @@ pipeline {
                 label 'mac'
             }
             environment {
-                HOME_FOLDER = '/Users/ec2-user/jenkins'
                 PROJECT_FOLDER = 'iOSProj'
                 CERT_PRIVATE = credentials('priv')
                 CERT_SIGNATURE = credentials('development')
