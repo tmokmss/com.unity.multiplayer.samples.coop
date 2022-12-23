@@ -114,36 +114,35 @@ pipeline {
                 #############################################
                 echo "===Setting up a temporary keychain"
                 pwd
-                # security コマンドがec2-userではpermission errorになることがあるので、sudoで実行する
                 # Unique keychain ID
                 MY_KEYCHAIN="temp.keychain.`uuidgen`"
                 MY_KEYCHAIN_PASSWORD="secret"
-                sudo security create-keychain -p "$MY_KEYCHAIN_PASSWORD" "$MY_KEYCHAIN"
+                security create-keychain -p "$MY_KEYCHAIN_PASSWORD" "$MY_KEYCHAIN"
                 # Append the temporary keychain to the user search list
                 # double backslash for groovy
-                sudo security list-keychains -d user -s "$MY_KEYCHAIN" $(security list-keychains -d user | sed s/\\"//g)
+                security list-keychains -d user -s "$MY_KEYCHAIN" $(security list-keychains -d user | sed s/\\"//g)
                 # Output user keychain search list for debug
-                sudo security list-keychains -d user
+                security list-keychains -d user
                 # Disable lock timeout (set to "no timeout")
-                sudo security set-keychain-settings "$MY_KEYCHAIN"
+                security set-keychain-settings "$MY_KEYCHAIN"
                 # Unlock keychain
-                sudo security unlock-keychain -p "$MY_KEYCHAIN_PASSWORD" "$MY_KEYCHAIN"
+                security unlock-keychain -p "$MY_KEYCHAIN_PASSWORD" "$MY_KEYCHAIN"
                 echo "===Importing certs"
                 # Import certs to a keychain; bash process substitution doesn't work with security for some reason
-                sudo security -v import $CERT_SIGNATURE -k "$MY_KEYCHAIN" -T "/usr/bin/codesign"
+                security -v import $CERT_SIGNATURE -k "$MY_KEYCHAIN" -T "/usr/bin/codesign"
                 #rm /tmp/cert
                 PASSPHRASE=""
-                sudo security -v import $CERT_PRIVATE -k "$MY_KEYCHAIN" -P "$PASSPHRASE" -t priv -T "/usr/bin/codesign"
+                security -v import $CERT_PRIVATE -k "$MY_KEYCHAIN" -P "$PASSPHRASE" -t priv -T "/usr/bin/codesign"
                 # Dump keychain for debug
-                sudo security dump-keychain "$MY_KEYCHAIN"
+                security dump-keychain "$MY_KEYCHAIN"
                 # Set partition list (ACL) for a key
-                sudo security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $MY_KEYCHAIN_PASSWORD $MY_KEYCHAIN
+                security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $MY_KEYCHAIN_PASSWORD $MY_KEYCHAIN
                 # Get signing identity for xcodebuild command
-                sudo security find-identity -v -p codesigning $MY_KEYCHAIN
+                security find-identity -v -p codesigning $MY_KEYCHAIN
                 # double backslash for groovy
                 CODE_SIGN_IDENTITY=`security find-identity -v -p codesigning $MY_KEYCHAIN | awk '/ *1\\)/ {print $2}'`
                 echo code signing identity is $CODE_SIGN_IDENTITY
-                sudo security default-keychain -s $MY_KEYCHAIN
+                security default-keychain -s $MY_KEYCHAIN
                 echo $MY_MY_KEYCHAIN > keychain.txt
 
                 #############################################
@@ -152,14 +151,8 @@ pipeline {
                 echo ===Building
                 pwd
 
-                sudo xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0 CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+                xcodebuild -scheme Unity-iPhone -sdk iphoneos -configuration AppStoreDistribution archive -archivePath "$PWD/build/Unity-iPhone.xcarchive" CODE_SIGN_STYLE="Manual" CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY OTHER_CODE_SIGN_FLAGS="--keychain=$MY_KEYCHAIN" -UseModernBuildSystem=0 CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
-                # Generate ipa
-                echo ===Exporting ipa
-                pwd
-                # xcodebuild -exportArchive -archivePath "$PWD/build/Unity-iPhone.xcarchive" -exportOptionsPlist ExportOptions.plist -exportPath "$PWD/build"
-
-                sudo chown -R ec2-user "$PWD/build"
                 zip -r iOSProj/build/Unity-iPhone.zip iOSProj/build/Unity-iPhone.xcarchive
                 '''
             }
