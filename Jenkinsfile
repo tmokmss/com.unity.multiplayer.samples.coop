@@ -7,6 +7,7 @@ pipeline {
                 docker {
                     image 'unityci/editor:2021.3.14f1-ios-1.0'
                     args '-u root:root'
+                    label 'linux'
                 }
             }
 
