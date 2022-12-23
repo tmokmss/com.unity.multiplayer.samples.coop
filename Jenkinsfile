@@ -46,6 +46,9 @@ pipeline {
                     zip -q -r iOSProj iOSProj
                     '''
                 }
+                sh '''
+                rm -rf ./Library
+                '''
                 // pick up archive xcode project
                 dir('') {
                     stash includes: 'iOSProj.zip', name: 'xcode-project'
