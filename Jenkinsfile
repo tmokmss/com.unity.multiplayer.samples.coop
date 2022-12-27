@@ -46,6 +46,7 @@ pipeline {
                         -cacheServerNamespacePrefix "MyProject" \
                         -cacheServerEnableDownload true \
                         -cacheServerEnableUpload true \
+                        -adb2 -enableCacheServer
                     echo "===Zipping Xcode project"
                     zip -q -r -0 iOSProj iOSProj
                     '''
