@@ -12,47 +12,48 @@ pipeline {
             }
 
             steps {
-                cache(maxCacheSize: 5000, caches: [arbitraryFileCache(path: './Library', compressionMethod: 'ZIP')]) {
-                    // install stuff for Unity, build xcode project, archive the result
-                    sh '''#!/bin/bash
-                    set -xe
-                    printenv
-                    ls -la
-                    echo "===Installing stuff for unity"
-                    apt-get update
-                    apt-get install -y curl unzip zip jq
-
-                    # Unity Build Serverを使う場合:
-                    mkdir -p /usr/share/unity3d/config/
-                    echo '{
-                    "licensingServiceBaseUrl": "'"$UNITY_BUILD_SERVER_URL"'",
-                    "enableEntitlementLicensing": true,
-                    "enableFloatingApi": true,
-                    "clientConnectTimeoutSec": 5,
-                    "clientHandshakeTimeoutSec": 10}' > /usr/share/unity3d/config/services-config.json
-                    mkdir -p ./iOSProj
-                    mkdir -p ./Build/iosBuild
-                    unity-editor \
-                        -quit \
-                        -batchmode \
-                        -nographics \
-                        -executeMethod ExportTool.ExportXcodeProject \
-                        -buildTarget iOS \
-                        -customBuildTarget iOS \
-                        -customBuildName iosBuild \
-                        -customBuildPath ./Build/iosBuild \
-                        -projectPath "./" \
-                        -cacheServerEndpoint "10.0.157.236:10080" \
-                        -cacheServerNamespacePrefix "MyProject" \
-                        -cacheServerEnableDownload true \
-                        -cacheServerEnableUpload true \
-                        -adb2 -enableCacheServer
-                    echo "===Zipping Xcode project"
-                    zip -q -r -0 iOSProj iOSProj
+                // https://plugins.jenkins.io/jobcacher/
+                cache(maxCacheSize: 1000, caches: [arbitraryFileCache(path: './Logs', compressionMethod: 'ZIP')]) {
+                    sh '''
+                    # キャッシュ処理のデモ
+                    ls Logs
                     '''
                 }
-                sh '''
-                rm -rf ./Library
+                sh '''#!/bin/bash
+                set -xe
+                printenv
+                ls -la
+                echo "===Installing stuff for unity"
+                apt-get update
+                apt-get install -y curl unzip zip jq
+
+                # Unity Build Serverからライセンスを取得:
+                mkdir -p /usr/share/unity3d/config/
+                echo '{
+                "licensingServiceBaseUrl": "'"$UNITY_BUILD_SERVER_URL"'",
+                "enableEntitlementLicensing": true,
+                "enableFloatingApi": true,
+                "clientConnectTimeoutSec": 5,
+                "clientHandshakeTimeoutSec": 10}' > /usr/share/unity3d/config/services-config.json
+                mkdir -p ./iOSProj
+                mkdir -p ./Build/iosBuild
+                unity-editor \
+                    -quit \
+                    -batchmode \
+                    -nographics \
+                    -executeMethod ExportTool.ExportXcodeProject \
+                    -buildTarget iOS \
+                    -customBuildTarget iOS \
+                    -customBuildName iosBuild \
+                    -customBuildPath ./Build/iosBuild \
+                    -projectPath "./" \
+                    -cacheServerEndpoint "10.0.157.236:10080" \
+                    -cacheServerNamespacePrefix "MyProject" \
+                    -cacheServerEnableDownload true \
+                    -cacheServerEnableUpload true \
+                    -adb2 -enableCacheServer
+                echo "===Zipping Xcode project"
+                zip -q -r -0 iOSProj iOSProj
                 '''
                 // pick up archive xcode project
                 dir('') {
