@@ -13,6 +13,7 @@ pipeline {
 
             steps {
                 // https://plugins.jenkins.io/jobcacher/
+                sh 'rm -rf Logs'
                 cache(maxCacheSize: 1000, caches: [arbitraryFileCache(path: './Logs', compressionMethod: 'ZIP')]) {
                     sh '''
                     # キャッシュ処理のデモ
