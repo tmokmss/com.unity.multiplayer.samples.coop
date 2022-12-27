@@ -48,7 +48,7 @@ pipeline {
                     -customBuildName iosBuild \
                     -customBuildPath ./Build/iosBuild \
                     -projectPath "./" \
-                    -cacheServerEndpoint "10.0.157.236:10080" \
+                    -cacheServerEndpoint "accelerator.build:10080" \
                     -cacheServerNamespacePrefix "MyProject" \
                     -cacheServerEnableDownload true \
                     -cacheServerEnableUpload true \
