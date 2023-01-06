@@ -17,7 +17,7 @@ pipeline {
                 cache(maxCacheSize: 1000, caches: [arbitraryFileCache(path: './Logs', compressionMethod: 'ZIP')]) {
                     sh '''
                     # キャッシュ処理のデモ
-                    ls Logs
+                    ls Logs || true
                     '''
                 }
                 sh '''#!/bin/bash
