@@ -28,6 +28,14 @@ pipeline {
                 apt-get update
                 apt-get install -y curl unzip zip jq
 
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip -q -o awscliv2.zip
+                ./aws/install
+
+                # S3にファイルを配置する例
+                echo 'File sharing via S3 example' > /tmp/sample.txt
+                aws s3 cp /tmp/sample.txt s3://${ARTIFACT_BUCKET_NAME}/s3_sample.txt
+
                 # Unity Build Serverからライセンスを取得:
                 mkdir -p /usr/share/unity3d/config/
                 echo '{
@@ -92,6 +100,10 @@ pipeline {
                 # Remove old project and unpack a new one
                 sudo rm -rf ${PROJECT_FOLDER}
                 unzip -q iOSProj.zip
+
+                # S3からファイルを取得する例
+                aws s3 cp s3://${ARTIFACT_BUCKET_NAME}/s3_sample.txt /tmp/s3_sample.txt
+                echo /tmp/s3_sample.txt
                 '''
 
                 // create export options file
