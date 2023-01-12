@@ -100,10 +100,6 @@ pipeline {
                 # Remove old project and unpack a new one
                 sudo rm -rf ${PROJECT_FOLDER}
                 unzip -q iOSProj.zip
-
-                # S3からファイルを取得する例
-                aws s3 cp s3://${ARTIFACT_BUCKET_NAME}/s3_sample.txt /tmp/s3_sample.txt
-                echo /tmp/s3_sample.txt
                 '''
 
                 // create export options file
@@ -123,6 +119,11 @@ pipeline {
                 source ~/.zshrc
                 # 必要なパスを通す
                 export PATH=/usr/local/bin:/opt/homebrew/bin:\${PATH}
+
+                # S3からファイルを取得する例
+                aws s3 cp s3://${ARTIFACT_BUCKET_NAME}/s3_sample.txt /tmp/s3_sample.txt
+                echo /tmp/s3_sample.txt
+
                 cd ${PROJECT_FOLDER}
                 TEAM_ID=$(echo $BUILD_SECRET_JSON | jq -r '.TEAM_ID')
                 BUNDLE_ID=$(echo $BUILD_SECRET_JSON | jq -r '.BUNDLE_ID')
