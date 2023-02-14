@@ -10,7 +10,9 @@ pipeline {
                     label 'linux'
                 }
             }
-
+            environment {
+                UNITY_SECRET_JSON = credentials('unity-secret')
+            }
             steps {
                 // https://plugins.jenkins.io/jobcacher/
                 sh 'rm -rf Logs'
@@ -36,14 +38,10 @@ pipeline {
                 echo 'File sharing via S3 example' > /tmp/sample.txt
                 aws s3 cp /tmp/sample.txt s3://${ARTIFACT_BUCKET_NAME}/s3_sample.txt
 
-                # Unity Build Serverからライセンスを取得:
-                mkdir -p /usr/share/unity3d/config/
-                echo '{
-                "licensingServiceBaseUrl": "'"$UNITY_BUILD_SERVER_URL"'",
-                "enableEntitlementLicensing": true,
-                "enableFloatingApi": true,
-                "clientConnectTimeoutSec": 5,
-                "clientHandshakeTimeoutSec": 10}' > /usr/share/unity3d/config/services-config.json
+                UNITY_SERIAL=$(echo $UNITY_SECRET_JSON | jq -r '.UNITY_SERIAL')
+                UNITY_EMAIL=$(echo $UNITY_SECRET_JSON | jq -r '.UNITY_EMAIL')
+                UNITY_PASSWORD=$(echo $UNITY_SECRET_JSON | jq -r '.UNITY_PASSWORD')
+
                 mkdir -p ./iOSProj
                 mkdir -p ./Build/iosBuild
                 unity-editor \
@@ -56,6 +54,9 @@ pipeline {
                     -customBuildName iosBuild \
                     -customBuildPath ./Build/iosBuild \
                     -projectPath "./" \
+                    -username "$UNITY_EMAIL" \
+                    -password "$UNITY_PASSWORD" \
+                    -serial "$UNITY_SERIAL" \
                     -cacheServerEndpoint "accelerator.build:10080" \
                     -cacheServerNamespacePrefix "MyProject" \
                     -cacheServerEnableDownload true \
