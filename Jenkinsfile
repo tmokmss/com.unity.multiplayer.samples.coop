@@ -1,5 +1,6 @@
 pipeline {
     agent none
+    options { timestamps () }
 
     stages {
         stage('build Unity project on spot') {
