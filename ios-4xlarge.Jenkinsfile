@@ -55,6 +55,7 @@ pipeline {
                     -customBuildTarget iOS \
                     -customBuildName iosBuild \
                     -customBuildPath ./Build/iosBuild \
+                    -job-worker-count 40
                     -projectPath "./"
                 echo "===Zipping Xcode project"
                 zip -q -r -0 iOSProj iOSProj
